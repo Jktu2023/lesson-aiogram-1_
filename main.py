@@ -3,9 +3,17 @@ from aiogram import Bot, Dispatcher, F # Основные классы aiogram: 
 # для фильтрации сообщений (например, по тексту или типу)
 from aiogram.types import Message # Тип для аннотации — чтобы IDE подсказывала методы
 from aiogram.filters import CommandStart, Command # Фильтры для команд /start, /help и т.д.
-from config import TOKEN_BOT, OPENWEATHER_API_KEY
 import random
 import httpx # httpx - библиотека для асинхронного HTTP-клиента
+
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+TOKEN_BOT = os.getenv('TOKEN_BOT')
+OPENWEATHER_API_KEY = os.getenv('OPENWEATHER_API_KEY')
+
 
 bot = Bot(token=TOKEN_BOT) # экземпляр бота, который будет общаться с Telegram API.
 dp = Dispatcher() # диспетчер, отвечает за прослушивание входящих обновлений от Telegram (сообщений, команд, фото и т.д.).
