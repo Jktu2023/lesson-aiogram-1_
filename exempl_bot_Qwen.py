@@ -88,10 +88,11 @@ async def profile(callback: CallbackQuery):
     await callback.message.edit_text(text) # Меняем текст. Редактирует исходное сообщение (то, под которым была кнопка).
                                             # Заменяет его текст на сформированную информацию о профиле.
 
-# === Обработка нажатия на товар (пример) ===
-@dp.callback_query(F.data.startswith("item_"))
+# === обработки нажатий на товары в каталоге, где каждый товар имеет callback_data вида item_1, item_2 и т.д. ===
+@dp.callback_query(F.data.startswith("item_"))  #Запусти эту функцию, если данные кнопки (callback_data) начинаются с item_
 async def item(callback: CallbackQuery):
-    item_id = callback.data.split("_")[1]
+    item_id = callback.data.split("_")[1]   # Если callback.data == "item_1" → item_id = "1"
+                                            # Если callback.data == "item_42" → item_id = "42"
     await callback.answer(f"Вы выбрали товар {item_id}")
     await callback.message.edit_text(f"Вы выбрали **Товар {item_id}**. Спасибо за выбор!")
 
