@@ -1,16 +1,18 @@
 import asyncio # Запускает асинхронную функцию main()
 from aiogram import Bot, Dispatcher, F # Основные классы aiogram: бот и диспетчер (обработчик событий) и Специальный объект
 # для фильтрации сообщений (например, по тексту или типу)
-from aiogram.types import Message # Тип для аннотации — чтобы IDE подсказывала методы
+from aiogram.types import Message, FSInputFile # Тип Message для аннотации — чтобы IDE подсказывала методы
 from aiogram.filters import CommandStart, Command # Фильтры для команд /start, /help и т.д.
 import random
 import httpx # httpx - библиотека для асинхронного HTTP-клиента
+from gtts import gTTS
+from translate import Translator
 
 from dotenv import load_dotenv
 import os
 
 load_dotenv()
-
+# токены из файла .env
 TOKEN_BOT = os.getenv('TOKEN_BOT')
 OPENWEATHER_API_KEY = os.getenv('OPENWEATHER_API_KEY')
 
@@ -19,19 +21,71 @@ bot = Bot(token=TOKEN_BOT) # экземпляр бота, который буд�
 dp = Dispatcher() # диспетчер, отвечает за прослушивание входящих обновлений от Telegram (сообщений, команд, фото и т.д.).
                         # Он решает, какую функцию выбрать и вызвать в ответ на то или иное сообщение.
 
+
+@dp.message(Command('doc'))
+async def doc(message: Message):
+    doc = FSInputFile("tmp/prices.csv")
+    await bot.send_document(message.chat.id, doc)
+@dp.message(Command('training'))
+async def training(message: Message):
+    training_list = [
+       "Тренировка 1:\n1. Скручивания: 3 подхода по 15 повторений\n2. Велосипед: 3 подхода по 20 повторений (каждая сторона)\n3. Планка: 3 подхода по 30 секунд",
+       "Тренировка 2:\n1. Подъемы ног: 3 подхода по 15 повторений\n2. Русский твист: 3 подхода по 20 повторений (каждая сторона)\n3. Планка с поднятой ногой: 3 подхода по 20 секунд (каждая нога)",
+       "Тренировка 3:\n1. Скручивания с поднятыми ногами: 3 подхода по 15 повторений\n2. Горизонтальные ножницы: 3 подхода по 20 повторений\n3. Боковая планка: 3 подхода по 20 секунд (каждая сторона)",
+   ]
+    rand_tr = random.choice(training_list)
+    await message.answer(f"Это ваша мини-тренировка на сегодня {rand_tr}")
+
+@dp.message(Command('training_vioce'))
+async def training(message: Message):
+    training_list = [
+       "Тренировка 1:\n1. Скручивания: 3 подхода по 15 повторений\n2. Велосипед: 3 подхода по 20 повторений (каждая сторона)\n3. Планка: 3 подхода по 30 секунд",
+       "Тренировка 2:\n1. Подъемы ног: 3 подхода по 15 повторений\n2. Русский твист: 3 подхода по 20 повторений (каждая сторона)\n3. Планка с поднятой ногой: 3 подхода по 20 секунд (каждая нога)",
+       "Тренировка 3:\n1. Скручивания с поднятыми ногами: 3 подхода по 15 повторений\n2. Горизонтальные ножницы: 3 подхода по 20 повторений\n3. Боковая планка: 3 подхода по 20 секунд (каждая сторона)",
+   ]
+    rand_tr = random.choice(training_list)
+    await message.answer(f"Это ваша мини-тренировка на сегодня {rand_tr}")
+    tts = gTTS(text=rand_tr, lang='ru')
+    tts.save("training.ogg")
+    audio = FSInputFile("training.ogg")
+    await bot.send_chat_action(message.chat.id, 'upload_audio')
+    await bot.send_voice(chat_id=message.chat.id, voice=audio)
+    os.remove("training.ogg")
+
+@dp.message(Command('video'))
+async def video(message: Message):
+    video = FSInputFile('tmp/video.mp4')
+    await bot.send_chat_action(message.chat.id, 'upload_video')
+    await bot.send_video(message.chat.id, video)
+
+@dp.message(Command('audio'))
+async def audio(message: Message):
+    audio = FSInputFile('tmp/sound2.mp3')
+    await bot.send_chat_action(message.chat.id, 'upload_audio')
+    await bot.send_audio(message.chat.id, audio)
+
 @dp.message(Command('photo')) # это декоратор в библиотеке aiogram (3.x), который указывает диспетчеру (Dispatcher):
                               # «Эту функцию нужно вызывать, когда приходит сообщение, подходящее под указаные условия.»
 async def photo(message: Message): # Обработчик команды /photo
-    list = ['https://epoi.ru/wa-data/public/shop/products/32/01/132/images/870/870.970.jpg','https://epoi.ru/wa-data/public/shop/products/32/01/132/images/24/24.970.jpg', 'https://epoi.ru/wa-data/public/shop/products/32/01/132/images/434/434.970.jpg', 'https://epoi.ru/wa-data/public/shop/products/32/01/132/images/434/434.970.jpg', 'https://epoi.ru/wa-data/public/shop/products/32/01/132/images/424/424.970.jpg', 'https://epoi.ru/wa-data/public/shop/products/32/01/132/images/716/716.970.jpg', 'https://epoi.ru/wa-data/public/shop/products/32/01/132/images/900/900.740x484.jpg', 'https://epoi.ru/wa-data/public/shop/products/32/01/132/images/715/715.970.jpg']
+    list = ['https://epoi.ru/wa-data/public/shop/products/32/01/132/images/870/870.970.jpg',
+            'https://epoi.ru/wa-data/public/shop/products/32/01/132/images/24/24.970.jpg',
+            'https://epoi.ru/wa-data/public/shop/products/32/01/132/images/434/434.970.jpg',
+            'https://epoi.ru/wa-data/public/shop/products/32/01/132/images/434/434.970.jpg',
+            'https://epoi.ru/wa-data/public/shop/products/32/01/132/images/424/424.970.jpg',
+            'https://epoi.ru/wa-data/public/shop/products/32/01/132/images/716/716.970.jpg',
+            'https://epoi.ru/wa-data/public/shop/products/32/01/132/images/900/900.740x484.jpg',
+            'https://epoi.ru/wa-data/public/shop/products/32/01/132/images/715/715.970.jpg',
+            ]
     rand_photo = random.choice(list)
     await message.answer_photo(photo=rand_photo, caption='Это супер крутая картинка') #  «await - Подожди, пока это действие (например, отправка фото в Telegram)
     # завершится, прежде чем переходить к следующей строке». async и await — основа асинхронного кода. Где можно использовать await? Только внутри async def функций!
 
-@dp.message(F.photo) # Фильтр для фотографий F.photo — значит "если сообщение содержит фото".
+@dp.message(F.photo) # Фильтр для фотографий F.photo — значит "если сообщение содержит фото". @bot.message_handler(commands('photos', prefix='&')) сработает команда в боте &photo
 async def react_photo(message: Message):
     list = ['Ого, какая фотка!', 'Класс!', 'Не отправляй мне такое больше', 'Много интересного у тебя!', 'Прикольная фотка!', 'Супер!', 'Круто!']
     rand_answ = random.choice(list)
     await message.answer(rand_answ)
+    await bot.download(message.photo[-1],destination=f'tmp/{message.photo[-1].file_id}.jpg')
 
 @dp.message(F.text == "что такое ИИ?") # Фильтр для текста F.text — значит "если сообщение содержит текст".  F.text == "..." — строгое сравнение текста.
 async def aitext(message: Message): # Обработчик текста
@@ -39,7 +93,9 @@ async def aitext(message: Message): # Обработчик текста
 
 @dp.message(CommandStart()) # Обработчик команды /start
 async def start(message: Message):
-    await message.answer("Приветики, я бот!")
+    await message.answer(f"Приветики,  {message.from_user.first_name}") # имя, {message.from_user.full_name} - полное имя.
+
+
 
 @dp.message(Command('help')) #
 async def help(message: Message): # Обработчик команды /help
@@ -83,6 +139,35 @@ async def weather_tomsk(message: Message): # Объявление асинхро
             weather_text = f"⚠️ Ошибка: не удалось получить данные о погоде."
 
         await message.answer(weather_text)
+
+@dp.message(F.text)  # Ловим любое текстовое сообщение для перевода
+async def translate_text(message: Message): # Объявление асинхронной функции
+    # Список команд, которые НЕ нужно переводить
+    commands = {'/start', '/help', '/photo', '/weather', '/training', '/doc', '/video', '/audio', '/training_voice', 'что такое ии?'}
+    user_text = message.text.strip().lower()
+
+    # Если это команда — не переводим
+    if user_text in [cmd.lower() for cmd in commands] or user_text.startswith('/'):
+        return  # Пропускаем, пусть другие обработчики работают
+
+    try:
+        # Создаём переводчик с русского на английский
+        translator = Translator(from_lang="ru", to_lang="en")
+        translation = translator.translate(message.text)
+
+        # Отправляем перевод
+        await message.reply(f"🇬🇧 {translation}")
+
+    except Exception as e:
+        await message.reply("❌ Не удалось выполнить перевод. Попробуйте снова.")
+
+@dp.message() # ответ на все
+async def echo(message: Message):
+    if message.text.lower() == 'test':
+        await message.answer('Тестируем')
+    await message.send_copy(chat_id=message.chat.id) # эхо
+
+
 
 
 async def main():
