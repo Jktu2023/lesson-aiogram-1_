@@ -1,4 +1,4 @@
-
+# Этот бот возвращает фото кошек
 import asyncio
 import requests
 import random

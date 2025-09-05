@@ -27,6 +27,15 @@ if not TOKEN_BOT:
 bot = Bot(token=TOKEN_BOT)
 dp = Dispatcher()
 
+
+# Словарь с товарами (в реальном боте может быть база данных)
+PRODUCTS = {
+    1: {"name": "Футболка", "price": "1 500 ₽", "desc": "Хлопковая, чёрная, размеры S–XL"},
+    2: {"name": "Кепка", "price": "990 ₽", "desc": "Бейсболка, синяя, регулируемая"},
+    3: {"name": "Рюкзак", "price": "2 800 ₽", "desc": "Водонепроницаемый, 20 л, серый"}
+}
+
+
 # === Обработчик команды /start ===
 @dp.message(CommandStart())
 async def start(message: Message):
@@ -88,8 +97,8 @@ async def profile(callback: CallbackQuery):
     await callback.message.edit_text(text) # Меняем текст. Редактирует исходное сообщение (то, под которым была кнопка).
                                             # Заменяет его текст на сформированную информацию о профиле.
 
-# === обработки нажатий на товары в каталоге, где каждый товар имеет callback_data вида item_1, item_2 и т.д. ===
-@dp.callback_query(F.data.startswith("item_"))  #Запусти эту функцию, если данные кнопки (callback_data) начинаются с item_
+# старая версия ===
+@dp.callback_query(F.data.startswith("item++"))  #Запусти эту функцию, если данные кнопки (callback_data) начинаются с item_
 async def item_0(callback: CallbackQuery):
     item_id = callback.data.split("_")[1]   # Если callback.data == "item_1" → item_id = "1"
                                             # Если callback.data == "item_42" → item_id = "42"
@@ -97,14 +106,8 @@ async def item_0(callback: CallbackQuery):
     await callback.message.edit_text(f"Вы выбрали **Товар {item_id}**. Спасибо за выбор!")
 
 
-# Словарь с товарами (в реальном боте может быть база данных)
-PRODUCTS = {
-    1: {"name": "Футболка", "price": "1 500 ₽", "desc": "Хлопковая, чёрная, размеры S–XL"},
-    2: {"name": "Кепка", "price": "990 ₽", "desc": "Бейсболка, синяя, регулируемая"},
-    3: {"name": "Рюкзак", "price": "2 800 ₽", "desc": "Водонепроницаемый, 20 л, серый"}
-}
-
-@dp.callback_query(F.data.startswith("item_"))
+# === обработки нажатий на товары в каталоге, где каждый товар имеет callback_data вида item_1, item_2 и т.д. ===
+@dp.callback_query(F.data.startswith("item_"))  #Запусти эту функцию, если данные кнопки (callback_data) начинаются с item_
 async def item(callback: CallbackQuery):
     # Извлекаем ID товара
     try:
