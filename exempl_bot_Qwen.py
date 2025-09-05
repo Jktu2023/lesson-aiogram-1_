@@ -90,11 +90,70 @@ async def profile(callback: CallbackQuery):
 
 # === обработки нажатий на товары в каталоге, где каждый товар имеет callback_data вида item_1, item_2 и т.д. ===
 @dp.callback_query(F.data.startswith("item_"))  #Запусти эту функцию, если данные кнопки (callback_data) начинаются с item_
-async def item(callback: CallbackQuery):
+async def item_0(callback: CallbackQuery):
     item_id = callback.data.split("_")[1]   # Если callback.data == "item_1" → item_id = "1"
                                             # Если callback.data == "item_42" → item_id = "42"
     await callback.answer(f"Вы выбрали товар {item_id}")
     await callback.message.edit_text(f"Вы выбрали **Товар {item_id}**. Спасибо за выбор!")
+
+
+# Словарь с товарами (в реальном боте может быть база данных)
+PRODUCTS = {
+    1: {"name": "Футболка", "price": "1 500 ₽", "desc": "Хлопковая, чёрная, размеры S–XL"},
+    2: {"name": "Кепка", "price": "990 ₽", "desc": "Бейсболка, синяя, регулируемая"},
+    3: {"name": "Рюкзак", "price": "2 800 ₽", "desc": "Водонепроницаемый, 20 л, серый"}
+}
+
+@dp.callback_query(F.data.startswith("item_"))
+async def item(callback: CallbackQuery):
+    # Извлекаем ID товара
+    try:
+        item_id = int(callback.data.split("_")[1])
+    except (IndexError, ValueError):
+        await callback.answer("❌ Ошибка: неверный формат товара.")
+        await callback.message.edit_text("Товар не найден. Попробуйте вернуться в каталог.")
+        return
+
+    # Проверяем, существует ли товар
+    if item_id not in PRODUCTS:
+        await callback.answer("🚫 Товар не найден")
+        await callback.message.edit_text(
+            "Извините, такой товар больше не доступен.",
+            reply_markup=InlineKeyboardBuilder().add(
+                InlineKeyboardButton(text="← Вернуться в каталог", callback_data="catalog")
+            ).as_markup()
+        )
+        return
+
+    # Получаем информацию о товаре
+    product = PRODUCTS[item_id]
+    name = product["name"]
+    price = product["price"]
+    desc = product["desc"]
+
+    # Отправляем всплывающее уведомление
+    await callback.answer(f"✅ Вы выбрали: {name}")
+
+    # Формируем текст с описанием товара
+    text = (
+        f"🛍️ **Товар: {name}**\n\n"
+        f"💰 **Цена:** {price}\n"
+        f"📝 **Описание:** {desc}\n\n"
+        f"Готовы оформить заказ?"
+    )
+
+    # Создаём клавиатуру с кнопками
+    builder = InlineKeyboardBuilder()
+    builder.row(
+        InlineKeyboardButton(text="🛒 Добавить в корзину", callback_data=f"add_{item_id}")
+    )
+    builder.row(
+        InlineKeyboardButton(text="← Назад в каталог", callback_data="catalog")
+    )
+
+    # Редактируем сообщение
+    await callback.message.edit_text(text=text, reply_markup=builder.as_markup(), parse_mode="MarkdownV2")
+
 
 # === Запуск бота ===
 async def main():
