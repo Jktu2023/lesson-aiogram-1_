@@ -61,10 +61,10 @@ cursor.execute('''
         expenciences3 REAL)
                 ''')
 conn.commit()
-conn.close()
+
 
 # Вызов инициализации
-init_db()
+# init_db()
 
 class FinanceForm(StatesGroup):
     category1 = State()
@@ -169,9 +169,17 @@ async def expenciences3(message: Message, state: FSMContext): # Объявлен
     with sqlite3.connect('user.db') as conn:
         cursor = conn.cursor()
         cursor.execute('''
-            INSERT INTO finances (user_id, category1, expenciences1, category2, expenciences2, category3, expenciences3)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        ''', (telegram_id, data['category1'], data['expenciences1'], data['category2'], data['expenciences2'], data['category3'], data['expenciences3']))
+            UPDATE users 
+            SET category1 = ?, expenciences1 = ?, 
+                category2 = ?, expenciences2 = ?, 
+                category3 = ?, expenciences3 = ?
+            WHERE telegram_id = ?
+        ''', (
+            data['category1'], data['expenciences1'],
+            data['category2'], data['expenciences2'],
+            data['category3'], data['expenciences3'],
+            telegram_id
+        ))
         conn.commit()
 
     await message.reply('Данные сохранены.')
